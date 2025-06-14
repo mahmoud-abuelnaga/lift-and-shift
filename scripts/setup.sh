@@ -1000,6 +1000,9 @@ tomcat_service_name="tomcat10"
 
 asg_name="asg-ubuntu-tomcat-web-server"
 
+# build the application
+mvn -f "$application_build_path/pom.xml" clean install || die "failed to build the application" "$?"
+
 # create security groups
 ## load balancer security group
 lb_secg_id=$(create_sg "$lb_secg_name" "$lb_secg_desc" "$vpc_id") || die "Failed to create security group $lb_secg_name" "$?"
@@ -1053,9 +1056,6 @@ update_hosted_zone_record_set "$hosted_zone_id" "$change_record_set_string" || d
 sed -i "s|^memcached\.active\.host=.*|memcached.active.host=$memcached_dns_record_name.$private_domain_name|" "$application_properites_path"
 sed -i "s|^rabbitmq\.address=.*|rabbitmq.address=$rabbitmq_dns_record_name.$private_domain_name|" "$application_properites_path"
 sed -i "s|^jdbc\.url=.*|jdbc.url=jdbc:mysql://$mariadb_dns_record_name.$private_domain_name:3306/accounts?useUnicode=true\&characterEncoding=UTF-8\&zeroDateTimeBehavior=convertToNull|" "$application_properites_path"
-
-# build the application
-mvn -f "$application_build_path/pom.xml" clean install
 
 # create web server instance
 tomcat_instance_id=$(create_ec2_instance "$ubuntu_2404_ami_id" "$default_instance_type" "$key_name" "$web_server_secg_id" "$tomcat_instance_name" 1 "$tomcat_server_init_script_path") || die "failed to create tomcat instance" "$?"
