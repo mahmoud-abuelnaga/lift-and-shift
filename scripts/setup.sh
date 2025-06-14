@@ -1002,115 +1002,115 @@ asg_name="asg-ubuntu-tomcat-web-server"
 
 # create security groups
 ## load balancer security group
-# lb_secg_id=$(create_sg "$lb_secg_name" "$lb_secg_desc" "$vpc_id") || die "Failed to create security group $lb_secg_name" "$?"
-# allow_http_for_sg "$lb_secg_id" || die "Failed to allow HTTP for security group $lb_secg_id" "$?"
-# allow_https_for_sg "$lb_secg_id" || die "Failed to allow HTTPs for security group $lb_secg_id" "$?"
+lb_secg_id=$(create_sg "$lb_secg_name" "$lb_secg_desc" "$vpc_id") || die "Failed to create security group $lb_secg_name" "$?"
+allow_http_for_sg "$lb_secg_id" || die "Failed to allow HTTP for security group $lb_secg_id" "$?"
+allow_https_for_sg "$lb_secg_id" || die "Failed to allow HTTPs for security group $lb_secg_id" "$?"
 
 ## web server security group
-# web_server_secg_id=$(create_sg "$web_server_secg_name" "$web_server_secg_desc" "$vpc_id") || die "Failed to create security group $web_server_secg_name" "$?"
-# allow_incoming_traffic_on_port_from_another_sg "$web_server_secg_id" "tcp" 8080 "$lb_secg_id" || die "Failed to allow requests from load balancer security group for $web_server_secg_id" "$?"
-# allow_ssh_from_all_ips_for_sg "$web_server_secg_id" || die "Failed to allow ssh for $web_server_secg_name"
+web_server_secg_id=$(create_sg "$web_server_secg_name" "$web_server_secg_desc" "$vpc_id") || die "Failed to create security group $web_server_secg_name" "$?"
+allow_incoming_traffic_on_port_from_another_sg "$web_server_secg_id" "tcp" 8080 "$lb_secg_id" || die "Failed to allow requests from load balancer security group for $web_server_secg_id" "$?"
+allow_ssh_from_all_ips_for_sg "$web_server_secg_id" || die "Failed to allow ssh for $web_server_secg_name"
 
 ## web server services security group
-# services_secg_id=$(create_sg "$services_secg_name" "$services_secg_desc" "$vpc_id") || die "Failed to create security group $services_secg_name" "$?"
-# allow_incoming_traffic_on_port_from_another_sg "$services_secg_id" "tcp" 3306 "$web_server_secg_id" || die "Failed to allow requests from web server to mariadb" "$?"
-# allow_incoming_traffic_on_port_from_another_sg "$services_secg_id" "tcp" 11211 "$web_server_secg_id" || die "Failed to allow requests from web server to memcached" "$?"
-# allow_incoming_traffic_on_port_from_another_sg "$services_secg_id" "tcp" 5672 "$web_server_secg_id" || die "Failed to allow requests from web server to rabbitmq non ssl port" "$?"
-# allow_incoming_traffic_on_port_from_another_sg "$services_secg_id" "tcp" 5671 "$web_server_secg_id" || die "Failed to allow requests from web server to rabbitmq ssl port" "$?"
-# allow_ssh_from_all_ips_for_sg "$services_secg_id" || die "Failed to allow ssh for $services_secg_name" "$?"
-# allow_traffic_within_sg "$services_secg_id" || die "Failed to allow traffic within web server services security group" "$?"
+services_secg_id=$(create_sg "$services_secg_name" "$services_secg_desc" "$vpc_id") || die "Failed to create security group $services_secg_name" "$?"
+allow_incoming_traffic_on_port_from_another_sg "$services_secg_id" "tcp" 3306 "$web_server_secg_id" || die "Failed to allow requests from web server to mariadb" "$?"
+allow_incoming_traffic_on_port_from_another_sg "$services_secg_id" "tcp" 11211 "$web_server_secg_id" || die "Failed to allow requests from web server to memcached" "$?"
+allow_incoming_traffic_on_port_from_another_sg "$services_secg_id" "tcp" 5672 "$web_server_secg_id" || die "Failed to allow requests from web server to rabbitmq non ssl port" "$?"
+allow_incoming_traffic_on_port_from_another_sg "$services_secg_id" "tcp" 5671 "$web_server_secg_id" || die "Failed to allow requests from web server to rabbitmq ssl port" "$?"
+allow_ssh_from_all_ips_for_sg "$services_secg_id" || die "Failed to allow ssh for $services_secg_name" "$?"
+allow_traffic_within_sg "$services_secg_id" || die "Failed to allow traffic within web server services security group" "$?"
 
 # create key
-# create_key_pair "$key_name" || die "Failed to create the key" "$?"
+create_key_pair "$key_name" || die "Failed to create the key" "$?"
 
-# # create services instances
-# mariadb_instance_id=$(create_ec2_instance "$amazon_2023_ami_id" "$default_instance_type" "$key_name" "$services_secg_id" "$mariadb_instance_name" 1 "$mariadb_init_script_path") || die "failed to create mariadb instance" "$?"
-# memcached_instance_id=$(create_ec2_instance "$amazon_2023_ami_id" "$default_instance_type" "$key_name" "$services_secg_id" "$memcached_instance_name" 1 "$memcached_init_script_path") || die "failed to create memcached instance" "$?"
-# rabbitmq_instance_id=$(create_ec2_instance "$amazon_2023_ami_id" "$default_instance_type" "$key_name" "$services_secg_id" "$rabbitmq_instance_name" 1 "$rabbitmq_init_script_path") || die "failed to create memcached instance" "$?"
+# create services instances
+mariadb_instance_id=$(create_ec2_instance "$amazon_2023_ami_id" "$default_instance_type" "$key_name" "$services_secg_id" "$mariadb_instance_name" 1 "$mariadb_init_script_path") || die "failed to create mariadb instance" "$?"
+memcached_instance_id=$(create_ec2_instance "$amazon_2023_ami_id" "$default_instance_type" "$key_name" "$services_secg_id" "$memcached_instance_name" 1 "$memcached_init_script_path") || die "failed to create memcached instance" "$?"
+rabbitmq_instance_id=$(create_ec2_instance "$amazon_2023_ami_id" "$default_instance_type" "$key_name" "$services_secg_id" "$rabbitmq_instance_name" 1 "$rabbitmq_init_script_path") || die "failed to create memcached instance" "$?"
 
-# # create dns route 53 private hosted zone
-# hosted_zone_id=$(create_dns_route_53_private_hosted_zone "$private_domain_name" "$region" "$vpc_id" "vprofile-$(date +%s)" "Private hosted zone for vprofile project") || die "Failed to create DNS route 53 private hosted zone" "$?"
+# create dns route 53 private hosted zone
+hosted_zone_id=$(create_dns_route_53_private_hosted_zone "$private_domain_name" "$region" "$vpc_id" "vprofile-$(date +%s)" "Private hosted zone for vprofile project") || die "Failed to create DNS route 53 private hosted zone" "$?"
 
-# mariadb_instance_private_ip=$(get_instance_private_ip "$mariadb_instance_id") || die "Failed to get instance private ip" "$?"
-# memcached_instance_private_ip=$(get_instance_private_ip "$memcached_instance_id") || die "Failed to get instance private ip" "$?"
-# rabbitmq_instance_private_ip=$(get_instance_private_ip "$rabbitmq_instance_id") || die "Failed to get instance private ip" "$?"
+mariadb_instance_private_ip=$(get_instance_private_ip "$mariadb_instance_id") || die "Failed to get instance private ip" "$?"
+memcached_instance_private_ip=$(get_instance_private_ip "$memcached_instance_id") || die "Failed to get instance private ip" "$?"
+rabbitmq_instance_private_ip=$(get_instance_private_ip "$rabbitmq_instance_id") || die "Failed to get instance private ip" "$?"
 
-# change_record_set_string=$(cat << EOF
-# {
-#     "Comment": "Add records of services needed by vprofile web server",
-#     "Changes": [
-#         $(create_change_record_set_string "$private_domain_name" "$mariadb_dns_record_name" "$mariadb_instance_private_ip"),
-#         $(create_change_record_set_string "$private_domain_name" "$memcached_dns_record_name" "$memcached_instance_private_ip"),
-#         $(create_change_record_set_string "$private_domain_name" "$rabbitmq_dns_record_name" "$rabbitmq_instance_private_ip")
-#     ]
-# }
-# EOF
-# )
+change_record_set_string=$(cat << EOF
+{
+    "Comment": "Add records of services needed by vprofile web server",
+    "Changes": [
+        $(create_change_record_set_string "$private_domain_name" "$mariadb_dns_record_name" "$mariadb_instance_private_ip"),
+        $(create_change_record_set_string "$private_domain_name" "$memcached_dns_record_name" "$memcached_instance_private_ip"),
+        $(create_change_record_set_string "$private_domain_name" "$rabbitmq_dns_record_name" "$rabbitmq_instance_private_ip")
+    ]
+}
+EOF
+)
 
-# update_hosted_zone_record_set "$hosted_zone_id" "$change_record_set_string" || die "failed to change hosted zone record set" "$?"
+update_hosted_zone_record_set "$hosted_zone_id" "$change_record_set_string" || die "failed to change hosted zone record set" "$?"
 
 # update the application.properties
-# sed -i "s/^memcached\.active\.host=.*/mecached.active.host=$memcached_dns_record_name.$private_domain_name/" "$application_properites_path"
-# sed -i "s/^rabbitmq\.address=.*/rabbitmq.address=$rabbitmq_dns_record_name.$private_domain_name/" "$application_properites_path"
-# sed -i "s|^jdbc\.url=.*|jdbc.url=jdbc:mysql://$mariadb_dns_record_name.$private_domain_name:3306/accounts?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull|" "$application_properites_path"
+sed -i "s|^memcached\.active\.host=.*|memcached.active.host=$memcached_dns_record_name.$private_domain_name|" "$application_properites_path"
+sed -i "s|^rabbitmq\.address=.*|rabbitmq.address=$rabbitmq_dns_record_name.$private_domain_name|" "$application_properites_path"
+sed -i "s|^jdbc\.url=.*|jdbc.url=jdbc:mysql://$mariadb_dns_record_name.$private_domain_name:3306/accounts?useUnicode=true\&characterEncoding=UTF-8\&zeroDateTimeBehavior=convertToNull|" "$application_properites_path"
 
 # build the application
-# mvn -f "$application_build_path/pom.xml" clean install
+mvn -f "$application_build_path/pom.xml" clean install
 
 # create web server instance
-# tomcat_instance_id=$(create_ec2_instance "$ubuntu_2404_ami_id" "$default_instance_type" "$key_name" "$web_server_secg_id" "$tomcat_instance_name" 1 "$tomcat_server_init_script_path") || die "failed to create tomcat instance" "$?"
-# wait_till_ec2_instance_is_running "$tomcat_instance_id"
-# sleep 60
+tomcat_instance_id=$(create_ec2_instance "$ubuntu_2404_ami_id" "$default_instance_type" "$key_name" "$web_server_secg_id" "$tomcat_instance_name" 1 "$tomcat_server_init_script_path") || die "failed to create tomcat instance" "$?"
+wait_till_ec2_instance_is_running "$tomcat_instance_id"
+sleep 60
 
 # add the server fingerprint to the know hosts
-# tomcat_public_ip=$(get_instance_public_ip "$tomcat_instance_id") || die "failed to get tomcat server public ip" "$?"
-# echo "Ubuntu Tomcat Temporary Webserver Public IP: $tomcat_public_ip"
-# ssh_add_host_to_known_hosts "$tomcat_public_ip" || die "failed to add the tomcat web server fingerprint to the know hosts" "$?"
+tomcat_public_ip=$(get_instance_public_ip "$tomcat_instance_id") || die "failed to get tomcat server public ip" "$?"
+echo "Ubuntu Tomcat Temporary Webserver Public IP: $tomcat_public_ip"
+ssh_add_host_to_known_hosts "$tomcat_public_ip" || die "failed to add the tomcat web server fingerprint to the know hosts" "$?"
 
 # remove default tomcat ROOT folder
-# ssh -i "$key_path" "$ubuntu_ami_default_username"@"$tomcat_public_ip" "sudo systemctl stop $tomcat_service_name; sudo rm -rf /var/lib/tomcat10/webapps/ROOT"
+ssh -i "$key_path" "$ubuntu_ami_default_username"@"$tomcat_public_ip" "sudo systemctl stop $tomcat_service_name; sudo rm -rf /var/lib/tomcat10/webapps/ROOT"
 # copy the build
-# scp -i "$key_path" "$application_war_path" "$ubuntu_ami_default_username"@"$tomcat_public_ip":/tmp/vprofile.war || die "failed to copy the war file to the tomcat server" "$?"
+scp -i "$key_path" "$application_war_path" "$ubuntu_ami_default_username"@"$tomcat_public_ip":/tmp/vprofile.war || die "failed to copy the war file to the tomcat server" "$?"
 # deploying app 2
-# ssh -i "$key_path" "$ubuntu_ami_default_username"@"$tomcat_public_ip" "sudo systemctl stop $tomcat_service_name; sudo rm -rf /var/lib/tomcat10/webapps/ROOT; sudo mv /tmp/vprofile.war /var/lib/tomcat10/webapps/ROOT.war; sudo systemctl enable $tomcat_service_name; sudo systemctl start $tomcat_service_name" || die "failed to deploy the war file to the tomcat server" "$?"
+ssh -i "$key_path" "$ubuntu_ami_default_username"@"$tomcat_public_ip" "sudo systemctl stop $tomcat_service_name; sudo rm -rf /var/lib/tomcat10/webapps/ROOT; sudo mv /tmp/vprofile.war /var/lib/tomcat10/webapps/ROOT.war; sudo systemctl enable $tomcat_service_name; sudo systemctl start $tomcat_service_name" || die "failed to deploy the war file to the tomcat server" "$?"
 
 # create image out of ubuntu tomcat webserver
-# ubuntu_tomcat_webserver_image_id=$(create_image_from_ec2_instance "$tomcat_instance_id" "ubuntu-vprofile-tomcat-webserver" "Ubuntu Vprofile Tomcat Webserver") || die "failed to create image out of ubuntu tomcat webserver" "$?"
+ubuntu_tomcat_webserver_image_id=$(create_image_from_ec2_instance "$tomcat_instance_id" "ubuntu-vprofile-tomcat-webserver" "Ubuntu Vprofile Tomcat Webserver") || die "failed to create image out of ubuntu tomcat webserver" "$?"
 
 # create launch template out of the image id
-# template_id=$(create_launch_template "$tomcat_template_name" "v1 of ubuntu tomcat web server" "$ubuntu_tomcat_webserver_image_id" "$default_instance_type" "$key_name" "ec2-ubuntu-tomcat-web-server" "$web_server_secg_id") || die "failed to create launch template out of the image id" "$?"
+template_id=$(create_launch_template "$tomcat_template_name" "v1 of ubuntu tomcat web server" "$ubuntu_tomcat_webserver_image_id" "$default_instance_type" "$key_name" "ec2-ubuntu-tomcat-web-server" "$web_server_secg_id") || die "failed to create launch template out of the image id" "$?"
 
 # create target group
-# tg_arn=$(create_target_group "tg-ubuntu-tomcat-web-server" "HTTP" "8080" "$vpc_id") || die "failed to create target group" "$?"
-# enable_tg_lb_stickness "$tg_arn" "86400" || die "failed to enable tg lb stickness" "$?"
+tg_arn=$(create_target_group "tg-ubuntu-tomcat-web-server" "HTTP" "8080" "$vpc_id") || die "failed to create target group" "$?"
+enable_tg_lb_stickness "$tg_arn" "86400" || die "failed to enable tg lb stickness" "$?"
 
 # create application load balancer
-# lb_arn=$(create_load_balancer "lb-ubuntu-tomcat-web-server" "internet-facing" "application" "ipv4" "$lb_secg_id" "$vpc_subnets_id_str") || die "failed to create application load balancer" "$?"
+lb_arn=$(create_load_balancer "lb-ubuntu-tomcat-web-server" "internet-facing" "application" "ipv4" "$lb_secg_id" "$vpc_subnets_id_str") || die "failed to create application load balancer" "$?"
 
 # create http listener
 # shellcheck disable=SC2034
-# http_listener_arn=$(create_load_balancer_http_listener "$lb_arn" "$tg_arn") || die "failed to create http listener" "$?"
+http_listener_arn=$(create_load_balancer_http_listener "$lb_arn" "$tg_arn") || die "failed to create http listener" "$?"
 
 # create https listener
 # shellcheck disable=SC2034
-# https_listener_arn=$(create_load_balancer_https_listener "$lb_arn" "$tg_arn" "$certificate_arn") || die "failed to create https listener" "$?"
+https_listener_arn=$(create_load_balancer_https_listener "$lb_arn" "$tg_arn" "$certificate_arn") || die "failed to create https listener" "$?"
 
 # wait for image to be availabe
-# wait_till_image_is_available "$ubuntu_tomcat_webserver_image_id" || die "failed to wait till image is available" "$?"
+wait_till_image_is_available "$ubuntu_tomcat_webserver_image_id" || die "failed to wait till image is available" "$?"
 
 # delete original instance
-# terminate_ec2_instances "$tomcat_instance_id" || die "failed to terminate original instance" "$?"
+terminate_ec2_instances "$tomcat_instance_id" || die "failed to terminate original instance" "$?"
 
 # create autoscaling group
 # shellcheck disable=SC2016
-# create_autoscaling_group_with_elb_check "$asg_name" "$tomcat_template_name" '$Latest' 1 4 2 "$vpc_subnets_id_str" "$tg_arn" || die "failed to create autoscaling group" "$?"
-# asp_arn=$(add_autoscaling_policy_for_asg "$asg_name" "cpu-utilization-policy" "TargetTrackingScaling" "$(cat << EOF
-# {
-#     "PredefinedMetricSpecification": {
-#         "PredefinedMetricType": "ASGAverageCPUUtilization"
-#     },
-#     "TargetValue": 50.0
-# }
-# EOF
-# )") || die "failed to add autoscaling policy for asg" "$?"
-
+create_autoscaling_group_with_elb_check "$asg_name" "$tomcat_template_name" '$Latest' 1 4 2 "$vpc_subnets_id_str" "$tg_arn" || die "failed to create autoscaling group" "$?"
+# shellcheck disable=SC2034
+asp_arn=$(add_autoscaling_policy_for_asg "$asg_name" "cpu-utilization-policy" "TargetTrackingScaling" "$(cat << EOF
+{
+    "PredefinedMetricSpecification": {
+        "PredefinedMetricType": "ASGAverageCPUUtilization"
+    },
+    "TargetValue": 50.0
+}
+EOF
+)") || die "failed to add autoscaling policy for asg" "$?"
