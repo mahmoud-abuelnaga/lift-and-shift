@@ -421,8 +421,8 @@ ssh_add_host_to_known_hosts() {
     local fingerprint
     fingerprint=$(ssh-keyscan -H "$host") || return "$?"
     
-    echo "$fingerprint"
     echo "$fingerprint" >> "$HOME/.ssh/known_hosts"
+    return 0
 }
 
 ssh_add_ec2_host_to_known_hosts() {
@@ -992,7 +992,7 @@ mariadb_dns_record_name="db"
 memcached_dns_record_name="memcached"
 rabbitmq_dns_record_name="rabbitmq"
 
-application_properites_path="../vprofile-project/userdata/application.properties"
+application_properites_path="../vprofile-project/src/main/resources/application.properties"
 application_build_path="../vprofile-project"
 application_war_path="../vprofile-project/target/vprofile-v2.war"
 
@@ -1056,12 +1056,12 @@ sed -i "s|^rabbitmq\.address=.*|rabbitmq.address=$rabbitmq_dns_record_name.$priv
 sed -i "s|^jdbc\.url=.*|jdbc.url=jdbc:mysql://$mariadb_dns_record_name.$private_domain_name:3306/accounts?useUnicode=true\&characterEncoding=UTF-8\&zeroDateTimeBehavior=convertToNull|" "$application_properites_path"
 
 # build the application
-mvn -f "$application_build_path/pom.xml" clean install || die "failed to build the application" "$?"
+mvn -f "$application_build_path/pom.xml" clean install -DskipTests || die "failed to build the application" "$?"
 
 # create web server instance
 tomcat_instance_id=$(create_ec2_instance "$ubuntu_2404_ami_id" "$default_instance_type" "$key_name" "$web_server_secg_id" "$tomcat_instance_name" 1 "$tomcat_server_init_script_path") || die "failed to create tomcat instance" "$?"
 wait_till_ec2_instance_is_running "$tomcat_instance_id"
-sleep 60
+sleep 180
 
 # add the server fingerprint to the know hosts
 tomcat_public_ip=$(get_instance_public_ip "$tomcat_instance_id") || die "failed to get tomcat server public ip" "$?"
